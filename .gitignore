@@ -1,4 +1,8 @@
+README.md
+Weather_visuals.zip
 .env
+/.env
+Scripts
 # Django #
 *.log
 *.pot

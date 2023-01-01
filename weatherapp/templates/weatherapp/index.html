@@ -7,18 +7,70 @@
     <meta name="description" content="description"/>
     <meta name="author" content="author" />
     <meta name="keywords" content="keywords" />
-    <link rel="stylesheet" href="{% static 'styles.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" type="text/css" />
+    <style type="text/css">
+      .weather-app{
+        background-image: url("{% static '' %}{{ background_path }}");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+    </style>
   </head>
   <body>
-    <form action="" method="post">
-      {% csrf_token %}
-      <input type="text" placeholder="Enter city" name="city" id="">
-      <button type="submit">Enter</button>
-    </form>
-    <h1>{{city.title}}</h1>
-    <h1>{{description}}</h1>
-    <h1>{{temp}}</h1>
-    <h1>{{day}}</h1>
-    <img src="https://openweathermap.org/img/w/{{icon}}.png" alt="Weather icon" width="100px"'>
+    <div class="weather-app">
+      <div class="container">
+        <h3 class="brand">what's the weather?</h3>
+        <div>
+          <h1 class="temp">{{temp}}&#176;</h1>
+
+          <div class="city-time">
+            <h1 class="name">{{city.title}}</h1>
+            <small>
+              <span class="time">{{hour}}:{{minute}} {{meridiem}}</span>
+              -
+              <span class="date">{{weekday}} {{month}} {{day}}</span>
+            </small>
+          </div>
+          <div class="weather">
+            <img src="{% static '' %}icons/day/{{ description }}.png" class="icon" alt="Weather Icon" width="50" height="50">
+            <span class="condition">{{description}}</span>
+          </div>
+        </div>
+          <div class="panel">
+            <div class="go">
+              <form id="locationInput" method="POST" action="">
+                {% csrf_token %}
+                <input type="text" class="search" placeholder="Enter Location..." name="city">
+                <button type="submit" class="submit">Go</button>
+              </form>
+            </div>
+            
+            <ul class="cities">
+              <li class="city"><a href="">Tokyo</a></li>
+              <li class="city"><a href="">California</a></li>
+              <li class="city"><a href="">Lagos</a></li>
+              <li class="city"><a href="">Athens</a></li>
+            </ul>
+
+            <ul class="details">
+              <h4>Weather Details</h4>
+              <li>
+                <span>Clouds</span> 
+                <span class="cloud">{{clouds}}</span>
+              </li>
+              <li>
+                <span>Humidity</span>
+                <span class="humidity">{{humidity}}%</span>
+              </li>
+              <li>
+                <span>Wind</span>
+                <span class="wind">{{wind_speed}}<i>kmph</i></span>
+              </li>
+            </ul>
+        </div>
+      </div>
+    </div>
   </body>
-</html>
+  </html>
+  <!-- <img src="https://openweathermap.org/img/w/{{icon}}.png" alt="Weather icon" width="100px"'> -->
