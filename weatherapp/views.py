@@ -13,41 +13,51 @@ load_dotenv()
 
 # Create your views here.
 def index(request):
-    CURRENT_LOCATION_API_KEY = os.getenv('CURRENT_LOCATION_API_KEY')
-    URL = 'https://api.bigdatacloud.net/data/ip-geolocation'
-    PARAMS = {'localityLanguage': 'en', 'key': CURRENT_LOCATION_API_KEY}
+    user_location, user_town, state, city_view = '', '', '', ''
     headers = {
         'Content-Type': 'application/json',
         'accept': 'application/json',
         "Accept-Encoding": "*",
         "Connection": "keep-alive"
     }
-    r = requests.get(url=URL, params=PARAMS, headers=headers)
-    res = r.json()    
-    state = res['location']["principalSubdivision"]
-    user_town = res['location']['localityName']
-    user_location = res['location']['localityName'].split('/')[-1]
-    print(f'State: {state}, User_location: {user_location}')
-    
-    if 'city' in request.POST:
+    if 'city' in request.POST and request.POST['city'] != '':
         city = request.POST['city']
+        city_view = city
         print(f'\nUser City request: {request.POST}\n')
     else:
-        print(user_town, type(user_town))
+        CURRENT_LOCATION_API_KEY = os.getenv('CURRENT_LOCATION_API_KEY')
+        URL = 'https://api.bigdatacloud.net/data/ip-geolocation'
+        PARAMS = {'localityLanguage': 'en', 'key': CURRENT_LOCATION_API_KEY}
+        r = requests.get(url=URL, params=PARAMS, headers=headers)
+        res = r.json()
+        state = res['location']["principalSubdivision"]
+        user_town = res['location']['localityName']
+        user_location = res['location']['localityName'].split('/')[-1]
+        print(f'State: {state}, User_location: {user_location}, User_town: {user_town}')
         city = user_town
-        print(f'\nDefault City request: {request.POST}\n')
+        city_view = f'{user_location}, {state}'
 
-    API_KEY = os.getenv('API_KEY')
-    URL = 'http://api.openweathermap.org/geo/1.0/direct'
-    PARAMS = {'q': city, 'appid': API_KEY}
-    r = requests.get(URL, PARAMS, headers=headers)
-    res = r.json ()
+    try:
+        API_KEY = os.getenv('API_KEY')
+        URL = 'http://api.openweathermap.org/geo/1.0/direct'
+        PARAMS = {'q': city, 'appid': API_KEY}
+        r = requests.get(URL, PARAMS, headers=headers)
+        res = r.json ()
+        lat = res[0]['lat']
+        lon = res[0]['lon']
+    except IndexError:
+        API_KEY = os.getenv('API_KEY')
+        URL = 'http://api.openweathermap.org/geo/1.0/direct'
+        city = state
+        PARAMS = {'q': city, 'appid': API_KEY}
+        r = requests.get(URL, PARAMS, headers=headers)
+        res = r.json ()
+        lat = res[0]['lat']
+        lon = res[0]['lon']
     print()
     print(res)
     print()
-    lat = res['location']['latitude']
-    lon = res['location']['longitude']
-    print(f"lat, lon = {lat, lon}")
+    print(f"lat, lon of {city} = {lat, lon}")
 
     URL = 'https://api.openweathermap.org/data/2.5/weather'
     PARAMS = {'lat': lat, 'lon': lon, 'appid': API_KEY, 'units': 'metric'}
@@ -80,6 +90,17 @@ def index(request):
         previous_description = ''
     background_path = f'images/{meridiem_folder}/{description.replace(" ", "_")}.jpg'
     
+    # Forecast
+    URL = 'https://api.openweathermap.org/data/2.5/forecast'
+    PARAMS = {'lat': lat, 'lon': lon, 'appid': API_KEY, 'units': 'metric'}
+    r = requests.get(url=URL, params=PARAMS, headers=headers)
+    res = r.json()
+    print(f'STATUS CODE: {r.status_code}')
+    forecast_dict = {}
+    forecast_list = [forecast_dict.update({i: [date['main']['temp'], date['weather'][0]['description'], datetime.datetime.strptime(date['dt_txt'], "%Y-%m-%d %H:%M:%S").strftime('%A'), datetime.datetime.strptime(date['dt_txt'], "%Y-%m-%d %H:%M:%S").strftime('%h'), datetime.datetime.strptime(date['dt_txt'], "%Y-%m-%d %H:%M:%S").strftime('%d')]}) for i, date in enumerate(res['list']) if '12:00:00' in date['dt_txt']]
+    print('\n' + forecast_dict + '\n')
+    del forecast_list
+
     context = {
          'description': description,
          'temp': temp,
@@ -89,7 +110,7 @@ def index(request):
          'weekday': weekday,
          'month': month,
          'day': day,
-         'city': f'{user_location}, {state}' if city not in request.POST else city, 
+         'city': city_view, 
          'hour': hour,
          'minute': minute, 
          'meridiem': meridiem,
