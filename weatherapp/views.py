@@ -10,19 +10,25 @@ load_dotenv()
 
 # TODO: Make timezones and date match the searched city
 # TODO: Use the current location of the machine to display weather
+# TODO: Replace static cities with 'most searched cities' and 'recently searched cities' only after signing in.
 
 # Create your views here.
 def index(request):
     user_location, user_town, state, city_view = '', '', '', ''
+    city_count_dict = {}
     headers = {
         'Content-Type': 'application/json',
         'accept': 'application/json',
         "Accept-Encoding": "*",
         "Connection": "keep-alive"
     }
-    if 'city' in request.POST and request.POST['city'] != '':
+    if 'city' in request.POST and request.POST['city'].strip() != '':
         city = request.POST['city']
-        city_view = city
+        city_view = city 
+        # if city in city_count_dict:
+        #     city_count_dict[city] += 1
+        # else:
+        #     city_count_dict[city] = 0
         print(f'\nUser City request: {request.POST}\n')
     else:
         CURRENT_LOCATION_API_KEY = os.getenv('CURRENT_LOCATION_API_KEY')
@@ -97,10 +103,15 @@ def index(request):
     res = r.json()
     print(f'STATUS CODE: {r.status_code}')
     forecast_dict = {}
-    forecast_list = [forecast_dict.update({i: [date['main']['temp'], date['weather'][0]['description'], datetime.datetime.strptime(date['dt_txt'], "%Y-%m-%d %H:%M:%S").strftime('%A'), datetime.datetime.strptime(date['dt_txt'], "%Y-%m-%d %H:%M:%S").strftime('%h'), datetime.datetime.strptime(date['dt_txt'], "%Y-%m-%d %H:%M:%S").strftime('%d')]}) for i, date in enumerate(res['list']) if '12:00:00' in date['dt_txt']]
-    print('\n' + forecast_dict + '\n')
+    forecast_list = [
+        forecast_dict.update(
+            {i: [datetime.datetime.strptime(date['dt_txt'], "%Y-%m-%d %H:%M:%S").strftime('%A'), 
+                date['main']['temp'], 
+                date['weather'][0]['description']]}) 
+        for i, date in enumerate(res['list']) if '12:00:00' in date['dt_txt']]
+    print(f'\n{forecast_dict}\n')
     del forecast_list
-
+    #  weekday, temp, description
     context = {
          'description': description,
          'temp': temp,
@@ -116,8 +127,7 @@ def index(request):
          'meridiem': meridiem,
          'meridiem_folder': meridiem_folder,
          'background_path': background_path,
+         'forecast_dict': forecast_dict,
+         
         }
     return render(request, 'weatherapp/index.html', context)
-
-def signup(request):
-    pass
