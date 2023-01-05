@@ -1,0 +1,10 @@
+{% block title %}Create an Account{% endblock %}
+
+{% block content %}
+    <form action="" method="post">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit">Sign Up</button>
+    </form>
+    <p><input type="checkbox" name="recieve_mail" id="" value="clicked"> I would like to recieve forecast and weather warning emails</p>
+{% endblock %}
