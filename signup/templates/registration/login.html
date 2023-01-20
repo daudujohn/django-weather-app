@@ -1,12 +1,13 @@
-{% block title %}
-Login
-{% endblock %}
+{% extends 'weatherapp/index.html' %}
+<title>{% block title %}Login{% endblock %}</title>
 
 {% block content %}
-<form action="" method="post">
-    {% csrf_token %}
-    {{form.as_p}}
-    <p>Don't have an account? Create one <a href="/signup">here</a></p>
-    <button type="submit">Login</button>
-</form>
-{% endblock%}
+<div class="main-content">
+    <form action="" method="post">
+        {% csrf_token %}
+        {{form.as_p}}
+        <p>Don't have an account? Create one <a href="/signup">here</a></p>
+        <button type="submit">Login</button>
+    </form>
+</div>
+{% endblock %}
